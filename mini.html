@@ -5,16 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>gmex — Обмен USDT</title>
 <style>
-  /* --- ДИЗАЙН DARK MODE --- */
+  /* --- ДИЗАЙН И ПЕРЕМЕННЫЕ --- */
   :root {
     /* LIGHT MODE (Fallback) */
-    --bg: #ffffff;
-    --card: #f7f7f7;
+    --bg: #f5f5f5;
+    --card: #ffffff;
     --text: #111111;
     --secondary-text: #6b6b6b;
     --accent: #007AFF; 
-    --green-buy: #0bb36b;
-    --red-sell: #ff3b30;
+    --green-buy: #008000;
+    --red-sell: #e53935;
     --border: rgba(0,0,0,0.08);
   }
 
@@ -26,7 +26,7 @@
       --text: #ffffff;
       --secondary-text: #9a9a9a;
       --accent: #0084ff; 
-      --green-buy: #00e073;
+      --green-buy: #4caf50;
       --red-sell: #ff453a;
       --border: rgba(255,255,255,0.1);
     }
@@ -60,52 +60,68 @@
   
   h2{font-weight:600;margin:0 0 16px 0;font-size:22px}
   h3{font-weight:600;margin:10px 0}
-  .container{display:block}
   
+  /* Карточки */
   .card{
     background:var(--card);
     border-radius:14px;
     padding:16px;
     margin:14px 0;
-    box-shadow:0 2px 5px rgba(0,0,0,0.1); 
   }
-  .exchange-buttons{display:flex;gap:10px;margin:16px 0}
+  
+  /* Кнопки Купить/Продать */
+  .exchange-buttons{display:flex;gap:10px;margin:16px 0 24px 0}
   .exchange-btn{
     flex:1;
     padding:16px; 
     border-radius:14px;
-    border:none; 
+    border:1px solid var(--border);
     background:var(--card); 
     font-weight:600;
     cursor:pointer;
-    box-shadow:0 1px 3px rgba(0,0,0,0.08); 
     transition: background 0.1s;
-    color: var(--text); 
+    color: var(--text);
+    text-align: center;
   }
   .exchange-btn:active{opacity:0.8;}
-  .buy-btn span{color:var(--green-buy)}
-  .sell-btn span{color:var(--red-sell)}
-
-  .rate-grid{display:flex;gap:12px;margin-top:12px}
-  .rate-card{
-    flex:1;
-    background:var(--card);
-    padding:10px;
-    border-radius:10px;
-    text-align:center
+  .btn-text {
+    font-size: 16px;
+    margin-top: 4px;
+    font-weight: 500;
   }
+  .icon-arrow-up { color:var(--green-buy); font-size: 24px; }
+  .icon-arrow-down { color:var(--red-sell); font-size: 24px; }
 
-  .input-group{display:flex;flex-direction:column;margin-bottom:12px}
-  label{font-size:13px;color:var(--secondary-text);margin-bottom:6px}
-  input[type="text"], input[type="number"]{
-    padding:12px;
-    border-radius:10px;
-    border:1px solid var(--border);
-    outline:none;
-    font-size:16px;
-    background:var(--bg); 
-    color:var(--text);
+  /* Сетка курсов */
+  .rate-grid-container {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
   }
+  .rate-group {
+    flex: 1;
+    background: var(--card);
+    padding: 12px;
+    border-radius: 12px;
+  }
+  .rate-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 4px 0;
+  }
+  .rate-label {
+    font-size: 13px;
+    color: var(--secondary-text);
+  }
+  .rate-value {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .buy-rate-text { color: var(--green-buy); }
+  .sell-rate-text { color: var(--red-sell); }
+  
+  /* Общие элементы */
   .input-separator{border:none;border-top:1px solid var(--border);margin:10px 0}
   .muted{color:var(--secondary-text);font-size:13px}
   a{color:var(--accent);text-decoration:none}
@@ -145,6 +161,22 @@
     margin-bottom: 2px;
     line-height: 1; 
   }
+
+  /* Стили для формы */
+  input[type="text"], input[type="number"]{
+    padding:12px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    outline:none;
+    font-size:16px;
+    background:var(--bg); 
+    color:var(--text);
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .input-group label{font-size:13px;color:var(--secondary-text);margin-bottom:6px;display:block;}
+  .input-group {margin-bottom: 12px;}
+
 </style>
 </head>
 <body>
@@ -156,7 +188,7 @@
     </div>
     <div class="nav-item" data-page="history" onclick="showPage('history')">
       <i>📜</i> История
-      </div>
+    </div>
     <div class="nav-item" data-page="profile" onclick="showPage('profile')">
       <i>👤</i> Профиль
     </div>
@@ -165,7 +197,13 @@
 <script>
   const WebApp = window.Telegram?.WebApp;
   const app = document.getElementById('app');
-  let rates = { buy: '80.50', sell: '79.00' };
+  // Пример актуального курса
+  let rates = { 
+    usdt_buy: '81.25', 
+    usdt_sell: '79.10',
+    btc_buy: '2,500,000',
+    btc_sell: '2,400,000'
+  };
 
   if (!WebApp) {
     app.innerHTML = '<div class="container"><h2>Ошибка</h2><p class="muted">Запуск MiniApp вне Telegram или ошибка инициализации.</p></div>';
@@ -178,6 +216,7 @@
   
   WebApp.ready();
   
+  // Установка темы
   if (WebApp.colorScheme === 'dark') {
     document.body.classList.add('twa-dark');
   } else {
@@ -211,6 +250,7 @@
   }
 
   function showPage(pageId) {
+    // Сброс кнопок Telegram
     try {
       WebApp.MainButton.hide();
       WebApp.MainButton.onClick(() => {});
@@ -218,8 +258,11 @@
       WebApp.BackButton.onClick(() => {});
     } catch(e){}
 
+    // Управление навигатором
     if (pageId !== 'buy' && pageId !== 'sell') {
         document.querySelector('.nav-footer').style.display = 'flex';
+    } else {
+        document.querySelector('.nav-footer').style.display = 'none';
     }
     
     updateFooterNav(pageId);
@@ -237,58 +280,96 @@
   function renderHomePage() {
     app.innerHTML = `
       <div class="container">
+        <div style="text-align:center;margin-bottom:20px;">
+            <div style="font-size:30px;font-weight:900;letter-spacing:2px;color:var(--text);margin-top:10px;">gmex</div>
+        </div>
+
         <h2>Моментальный обмен USDT</h2>
+
         <div class="exchange-buttons">
           <button class="exchange-btn" onclick="showPage('buy')">
-            <span class="buy-btn"><div style="font-size:20px;margin-bottom:4px;">↑</div> Купить USDT</span>
+            <div class="icon-arrow-up">▲</div>
+            <div class="btn-text">Купить USDT</div>
           </button>
           <button class="exchange-btn" onclick="showPage('sell')">
-            <span class="sell-btn"><div style="font-size:20px;margin-bottom:4px;">↓</div> Продать USDT</span>
+            <div class="icon-arrow-down">▼</div>
+            <div class="btn-text">Продать USDT</div>
           </button>
         </div>
 
-        <h3 class="muted">Актуальный курс на ${new Date().
-            toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'})}</h3>
-        <div class="rate-grid">
-          <div class="rate-card">
-            <span class="muted">Покупка</span>
-            <h3 style="margin:6px 0;color:var(--green-buy)">${rates.buy} ₽</h3>
-          </div>
-          <div class="rate-card">
-            <span class="muted">Продажа</span>
-            <h3 style="margin:6px 0;color:var(--red-sell)">${rates.sell} ₽</h3>
-          </div>
+        <h3 class="muted" style="margin-bottom:8px;">Актуальный курс на ${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'})}</h3>
+        
+        <div class="rate-grid-container">
+            <div class="rate-group">
+                <div class="rate-line">
+                    <span class="rate-label">Tether USDT (RUB)</span>
+                    <span class="rate-value">USDT</span>
+                </div>
+                <hr class="input-separator">
+                <div class="rate-line">
+                    <span class="rate-label">Покупка (₽)</span>
+                    <span class="rate-value buy-rate-text">${rates.usdt_buy}</span>
+                </div>
+                <div class="rate-line">
+                    <span class="rate-label">Продажа (₽)</span>
+                    <span class="rate-value sell-rate-text">${rates.usdt_sell}</span>
+                </div>
+            </div>
+            
+            <div class="rate-group">
+                <div class="rate-line">
+                    <span class="rate-label">Bitcoin (RUB)</span>
+                    <span class="rate-value">BTC</span>
+                </div>
+                <hr class="input-separator">
+                <div class="rate-line">
+                    <span class="rate-label">Покупка (₽)</span>
+                    <span class="rate-value buy-rate-text">${rates.btc_buy}</span>
+                </div>
+                <div class="rate-line">
+                    <span class="rate-label">Продажа (₽)</span>
+                    <span class="rate-value sell-rate-text">${rates.btc_sell}</span>
+                </div>
+            </div>
         </div>
 
         <div class="card">
-          <h3 style="margin-top:0;">О нас</h3>
-          <p class="muted">Контакты и поддержка — доступно 24/7</p>
+          <h3 style="margin-top:0;">Поддержка и Правила</h3>
+          
+          <div style="margin-bottom: 12px;">
+              <p class="muted" style="margin:0;font-weight:500;">Контакты и поддержка</p>
+              <p style="margin:4px 0 0 0;font-size:14px;">Обратная связь доступна 24/7 (Support)</p>
+          </div>
+          
           <hr class="input-separator">
-          <p class="muted">Правила AML / KYC / KYT</p>
+          
+          <div style="margin-bottom: 12px;">
+              <p class="muted" style="margin:0;font-weight:500;">Правила сервиса</p>
+              <p style="margin:4px 0 0 0;font-size:14px;">AML / KYC / KYT политики</p>
+          </div>
         </div>
 
-        <div class="footer">© gmex</div>
+        <div class="footer">© gmex | <a href="#" onclick="WebApp.openTelegramLink('https://t.me/gadzhigg'); return false;">Суппорт</a></div>
       </div>
     `;
   }
 
   function renderFormPage(type) {
     const isBuy = type === 'buy';
-    const title = isBuy ? 'Купить USDT' : 'Продать USDT';
+    const title = isBuy ? 'Купить USDT (TRC-20)' : 'Продать USDT (Ваша сеть)';
     const minAmount = isBuy ? 100000 : 10000;
-    const walletPlaceholder = isBuy ? 'Кошелек (TRC-20 / TRC20)' : 'Сеть или кошелек';
-    
-    document.querySelector('.nav-footer').style.display = 'none';
+    const walletPlaceholder = isBuy ? 'Адрес TRC-20' : 'Адрес/Сеть для получения';
+    const currentRate = isBuy ? rates.usdt_buy : rates.usdt_sell;
 
     app.innerHTML = `
       <div class="container">
         <h2>${title}</h2>
-        <p class="muted">Минимальная сумма обмена: ${minAmount.toLocaleString('ru-RU')} ₽</p>
+        <p class="muted">Курс: ${currentRate} ₽ | Мин. сумма: ${minAmount.toLocaleString('ru-RU')} ₽</p>
 
         <div class="card">
           <div class="input-group">
             <label for="amount">Сумма (₽)*</label>
-            <input id="amount" type="number" min="0" placeholder="Введите сумму">
+            <input id="amount" type="number" min="0" placeholder="Введите сумму в рублях">
           </div>
           <hr class="input-separator">
           <div class="input-group">
@@ -298,6 +379,7 @@
         </div>
 
         <div class="card">
+          <h3 style="margin-top:0;">Данные клиента (для KYC)</h3>
           <div class="input-group">
             <label for="fio-last">Фамилия*</label>
             <input id="fio-last" type="text" placeholder="Введите фамилию">
@@ -319,20 +401,20 @@
           <label for="terms" class="muted">Я принимаю <a href="#" onclick="WebApp.showPopup && WebApp.showPopup({title:'Правила', message:'Здесь правила сервиса.'}); return false;">правила и условия</a></label>
         </div>
 
-        <div class="muted" style="font-size:12px">Данные будут отправлены оператору для обработки.</div>
+        <div class="muted" style="font-size:12px">Нажимая "Продолжить", вы соглашаетесь на обработку данных.</div>
         
         <div style="height: 60px;"></div>
       </div>
     `;
 
     WebApp.BackButton.onClick(() => {showPage('home');});
+    try { WebApp.BackButton.show(); } catch(e){}
 
+    // Настройка MainButton
     try {
-      WebApp.MainButton.setText('Продолжить');
+      WebApp.MainButton.setText(isBuy ? 'Оформить покупку' : 'Оформить продажу');
       WebApp.MainButton.show();
-      try {
-        WebApp.MainButton.setColor(WebApp.themeParams.link_color || '#007AFF');
-      } catch(e){}
+      WebApp.MainButton.setColor(WebApp.themeParams.link_color || '#007AFF');
     } catch(e){}
 
     const handler = () => {
@@ -345,27 +427,21 @@
 
       if (!terms) { WebApp.showAlert('Примите правила сервиса.'); return; }
       if (!amount || amount < minAmount) { WebApp.showAlert(`Минимальная сумма ${minAmount.toLocaleString('ru-RU')} ₽`); return; }
-      if (!wallet  !lastName  !firstName) { WebApp.showAlert('Заполните все обязательные поля.'); return; }
+      if (!wallet || !lastName || !firstName) { WebApp.showAlert('Заполните все обязательные поля.'); return; }
 
-      const fio = ${lastName} ${firstName} + (patronymic ?  ${patronymic} : '');
+      const fio = `${lastName} ${firstName}` + (patronymic ? ` ${patronymic}` : '');
       sendApplication(type, amount, wallet, fio);
     };
 
-    try {
-      WebApp.MainButton.onClick(handler);
-    } catch(e){ /* ignore */ }
-
-    try {
-      WebApp.BackButton.show();
-    } catch(e){}
+    try { WebApp.MainButton.onClick(handler); } catch(e){ /* ignore */ }
   }
 
   function renderHistoryPage() {
     app.innerHTML = `
-      <div class="container" style="text-align:center;padding-top:40px;">
-        <p style="font-size:48px;margin:0 0 8px 0">👀</p>
-        <h2 style="margin:8px 0 0 0">Здесь пусто</h2>
-        <p class="muted">Создайте заявку и мы отобразим её здесь.</p>
+      <div class="container card" style="text-align:center;padding-top:40px;">
+        <p style="font-size:48px;margin:0 0 8px 0">📜</p>
+        <h2 style="margin:8px 0 0 0">Мои заявки</h2>
+        <p class="muted">История операций здесь пока пуста. Создайте первую заявку!</p>
       </div>
     `;
   }
@@ -374,17 +450,27 @@
     const user = WebApp.initDataUnsafe?.user || {};
     const nick = user.username ? '@' + user.username : 'Нет никнейма';
     const full = (user.first_name || '') + (user.last_name ? ' ' + user.last_name : '');
+    const language = user.language_code || 'N/A';
 
     app.innerHTML = `
       <div class="container">
-        <h2>Профиль gmex</h2>
+        <h2>Мой профиль</h2>
         <div class="card">
-          <p class="muted" style="margin:0">Имя в TG: ${full || 'N/A'}</p>
+          <h3 style="margin-top:0;">Данные Telegram</h3>
+          <p class="muted" style="margin:0">Имя в TG: <span style="color:var(--text);">${full || 'N/A'}</span></p>
           <hr class="input-separator">
-          <p class="muted" style="margin:0">Ник в TG: ${nick}</p>
+          <p class="muted" style="margin:0">Ник в TG: <span style="color:var(--text);">${nick}</span></p>
           <hr class="input-separator">
-          <p class="muted" style="margin:0">ID: ${user.id || 'N/A'}</p>
+          <p class="muted" style="margin:0">ID пользователя: <span style="color:var(--text);">${user.id || 'N/A'}</span></p>
         </div>
+        
+        <div class="card">
+            <h3 style="margin-top:0;">Настройки</h3>
+            <p class="muted" style="margin:0">Язык: <span style="color:var(--text);">${language}</span></p>
+            <hr class="input-separator">
+            <p class="muted" style="margin:0">Тема: <span style="color:var(--text);">${WebApp.colorScheme === 'dark' ? 'Темная' : 'Светлая'}</span></p>
+        </div>
+
       </div>
     `;
   }
@@ -394,3 +480,5 @@
 </script>
 </body>
 </html>
+
+
