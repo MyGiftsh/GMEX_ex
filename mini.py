@@ -8,7 +8,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, ContextTyp
 
 # --- Конфигурация ---
 # Лучше хранить токен в env var: export GMEX_TOKEN="..."
-TOKEN = os.environ.get("GMEX_TOKEN") or "7937830515:AAGTesyU-Pbqxsw0E1_d0g87-hk33XqQmxOU"  # <- Если вы предоставили токен, он здесь
+TOKEN = os.environ.get("GMEX_TOKEN") or "8584230387:AAF1FuIldR1LBHcmRAUHbi7zVtsgCxuJKZc"  # <- Если вы предоставили токен, он здесь
 WEB_APP_URL = os.environ.get("GMEX_WEBAPP_URL") or "https://mygiftsh.github.io/GMEX_ex/?v=5"  # обязательно HTTPS
 ADMIN = os.environ.get("GMEX_ADMIN") or "@gadzhigg"  # может быть "@username" или строка с числовым id
 
@@ -106,4 +106,5 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
