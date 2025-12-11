@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>gmex</title>
+<style>
+body {
+  margin: 0;
+  background: #000;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, Roboto;
+}
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding-bottom: 70px;
+  min-height: 100vh;
+}
+header {
+  text-align: center;
+  padding: 20px 0 10px;
+  font-size: 24px;
+  font-weight: 700;
+}
+main {
+  padding: 15px;
+}
+.card {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 15px;
+  border-radius: 16px;
+  margin-bottom: 15px;
+}
+.center { text-align:center; }
+.btn-row { display:flex; justify-content:center; gap:12px; margin-bottom:20px; }
+.ios-btn {
+  padding: 14px 26px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  cursor: pointer;
+  font-size: 16px;
+}
+.row {
+  display:flex;
+  justify-content:space-between;
+  padding:10px 0;
+  border-bottom:1px solid rgba(255,255,255,0.1);
+}
+nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 480px;
+  margin:0 auto;
+  background: rgba(20,20,20,0.95);
+  backdrop-filter: blur(16px);
+  border-top:1px solid rgba(255,255,255,0.1);
+  display:flex;
+  justify-content:space-around;
+  padding:10px 0;
+}
+nav button {
+  background:none;
+  border:none;
+  color:#aaa;
+  font-size:13px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  cursor:pointer;
+}
+nav button.active { color:#fff; font-weight:600; }
+.page { display:none; }
+.page.active { display:block; }
+input {
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  background: rgba(255,255,255,0.1);
+  border:1px solid rgba(255,255,255,0.2);
+  color:#fff;
+  margin-bottom:10px;
+}
+.primary-btn {
+  padding:12px;
+  background: rgba(255,255,255,0.2);
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.3);
+  cursor:pointer;
+  width:100%;
+  margin-top:10px;
+}
+#modal {
+  position:fixed;
+  inset:0;
+  background: rgba(0,0,0,0.65);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+#modal-content {
+  background: rgba(255,255,255,0.08);
+  padding:20px;
+  border-radius:16px;
+  width:90%;
+  max-width:420px;
+  backdrop-filter: blur(16px);
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+<header>gmex</header>
+
+<!-- Главная -->
+<main class="page active" id="page-home">
+  <div class="card center">
+    <div class="btn-row">
+      <div class="ios-btn" id="buy">Купить</div>
+      <div class="ios-btn" id="sell">Продать</div>
+    </div>
+    <div id="rate-time" style="color:#aaa;font-size:14px;margin-bottom:10px;">Актуальный курс —</div>
+    <div id="rate-usdt" style="font-size:24px;font-weight:700;margin-bottom:10px;">— ₽</div>
+  </div>
+  <div class="card">
+    <div class="row">
+      <div>USDT</div>
+      <div id="price-buy">— ₽ / купить</div>
+      <div id="price-sell">— ₽ / продать</div>
+    </div>
+  </div>
+  <div class="card">
+    <div style="font-weight:700;margin-bottom:4px;">О нас</div>
+    <div style="color:#aaa;margin-bottom:10px;">Оффлайн обменник GMEX в Дубае.</div>
+    <button class="primary-btn" id="chat">Чат @gadzhigg</button>
+    <button class="primary-btn" id="policy">Политика конфиденциальности</button>
+  </div>
+</main>
+
+<!-- История -->
+<main class="page" id="page-history">
+  <div class="card">
+    <div style="font-size:18px;font-weight:600;margin-bottom:10px;">История 👀</div>
+    <div id="history"></div>
+  </div>
+</main>
+
+<!-- Локация -->
+<main class="page" id="page-location">
+  <div class="card center" style="height:60vh;font-size:40px;color:#777;">Soon…</div>
+</main>
+
+<!-- Профиль -->
+<main class="page" id="page-profile">
+  <div class="card">
+    <div style="font-size:18px;font-weight:600;margin-bottom:10px;">Профиль</div>
+    <input id="nick" placeholder="@nickname">
+    <input id="phone" placeholder="+7 900 ...">
+    <button class="primary-btn" id="save-profile">Сохранить</button>
+  </div>
+</main>
+
+</div>
+
+<!-- Нижнее меню -->
+<nav>
+  <button class="active" data-page="home">🏠 Главная</button>
+  <button data-page="history">📜 История</button>
+  <button data-page="location">📍 Локация</button>
+  <button data-page="profile">👤 Профиль</button>
+</nav>
+
+<!-- Модал -->
+<div id="modal">
+  <div id="modal-content"></div>
+</div>
+<script>
+// Навигация
+document.querySelectorAll("nav button").forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    let page=btn.dataset.page;
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.getElementById("page-"+page).classList.add("active");
+  };
+});
+// Профиль
+document.getElementById("save-profile").onclick=()=>{
+  localStorage.setItem("gmex_profile", JSON.stringify({
+    nick: document.getElementById("nick").value,
+    phone: document.getElementById("phone").value
+  }));
+  alert("Сохранено");
+};
+
+// История
+function loadHistory(){
+  let h=JSON.parse(localStorage.getItem("gmex_history")||"[]");
+let box=document.getElementById("history");
+  box.innerHTML="";
+  if(h.length===0){ box.innerHTML="<div style='color:#aaa'>Нет заявок</div>"; return; }
+  h.forEach(item=>{
+    box.innerHTML+=`<div class="card"><div><b>${item.type}</b></div><div>${item.amount} ₽</div><div style="color:#aaa">${item.fio}</div><div style="color:#777;font-size:12px">${item.time}</div></div>`;
+  });
+}
+loadHistory();
+// Модал
+function openModal(html){ document.getElementById("modal-content").innerHTML=html; document.getElementById("modal").style.display="flex"; }
+document.getElementById("modal").onclick=e=>{ if(e.target.id==="modal") document.getElementById("modal").style.display="none"; };
+
+// Чат и политика
+document.getElementById("chat").onclick=()=>window.open("https://t.me/gadzhigg","_blank");
+document.getElementById("policy").onclick=()=>openModal(`<h2>Политика конфиденциальности</h2><p style="color:#ccc;">GMEX MiniApp</p><p style="color:#aaa;">Сохраняем только данные профиля в браузере. Ничего не отправляем без вашего согласия.</p>`);
+
+// Купить / Продать
+function openForm(type){
+  document.getElementById("modal-content").innerHTML=`
+    <h2>${type}</h2>
+    <input id="fio" placeholder="ФИО">
+    <input id="amount" type="number" placeholder="Сумма (₽)">
+    <label><input type="checkbox" id="agree"> Я согласен с политикой</label>
+    <button class="primary-btn" id="send-form">${type}</button>
+  `;
+  document.getElementById("modal").style.display="flex";
+  document.getElementById("send-form").onclick=()=>{
+    let fio=document.getElementById("fio").value.trim();
+    let amount=document.getElementById("amount").value.trim();
+    let agree=document.getElementById("agree").checked;
+    if(!fio||!amount||!agree){alert("Заполните все поля"); return;}
+    let h=JSON.parse(localStorage.getItem("gmex_history")||"[]");
+    h.unshift({type:type,amount:amount,fio:fio,time:new Date().toLocaleString()});
+    localStorage.setItem("gmex_history",JSON.stringify(h));
+    let msg=encodeURIComponent(`GMEX\nДействие: ${type}\nФИО: ${fio}\nСумма: ${amount} ₽`);
+    window.open("https://t.me/share/url?text="+msg,"_blank");
+    document.getElementById("modal").style.display="none";
+    loadHistory();
+  };
+}
+document.getElementById("buy").onclick=()=>openForm("Купить");
+document.getElementById("sell").onclick=()=>openForm("Продать");
+// Курс USDT-RUB OKX
+async function updateRate(){
+  try{
+    const resp=await fetch("https://www.okx.com/api/v5/market/ticker?instId=USDT-RUB");
+    const js=await resp.json();
+    if(js.data&&js.data.length>0){
+      const last=parseFloat(js.data[0].last);
+      const buy=(last*1.013).toFixed(2);
+      const sell=(last*0.987).toFixed(2);
+      document.getElementById('rate-usdt').textContent=last.toFixed(2)+' ₽';
+      document.getElementById('rate-time').textContent='Актуальный курс на '+new Date().toLocaleTimeString();
+      document.getElementById('price-buy').textContent=buy+' ₽ / купить';
+      document.getElementById('price-sell').textContent=sell+' ₽ / продать';
+    }
+  }catch(e){ console.log("Ошибка курса:",e); document.getElementById('rate-usdt').textContent="Ошибка"; }
+}
+updateRate();
+setInterval(updateRate,20000);
+</script>
+
+</body>
+</html>
